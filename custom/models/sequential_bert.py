@@ -1,8 +1,6 @@
 import torch
 from torch import nn
-from transformers import BertModel, BertTokenizer, BertForSequenceClassification, BertConfig
-from torchinfo import summary
-from transformers.modeling_attn_mask_utils import _prepare_4d_attention_mask_for_sdpa
+from transformers import BertModel, BertTokenizer, BertConfig
 
 
 # Simplified/Sequential version of Huggingface bert model

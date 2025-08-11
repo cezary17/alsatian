@@ -85,7 +85,7 @@ def stacked_bar_plot_three_configurations(config_1, config_2, config_3, file_pat
     ax_legend = fig_legend.add_subplot(111)
     ax_legend.legend(handles[::-1], labels[::-1], loc='center', ncol=1)
     ax_legend.axis('off')  # Hide the axes
-    legend_file_path = os.path.join(file_path, f'breakdown-legend.svg')
+    legend_file_path = os.path.join(file_path, 'breakdown-legend.svg')
     fig_legend.savefig(legend_file_path, bbox_inches='tight', format='svg')
     plt.close(fig_legend)
 

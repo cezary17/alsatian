@@ -18,7 +18,7 @@ from experiments.main_experiments.snapshots.synthetic.generate_set import get_ar
 from experiments.main_experiments.snapshots.trained.build_trained_model_store import get_trained_models_and_model_store
 from global_utils.benchmark_util import Benchmarker
 from global_utils.constants import TRAIN, TEST, END_TO_END, DETAILED_TIMES
-from global_utils.file_names import parsable_as_list, to_path_list
+from global_utils.file_names import parsable_as_list
 from global_utils.model_names import VISION_MODEL_CHOICES, RESNET_18, RESNET_152, EFF_NET_V2_L, VIT_L_32, BERT
 from model_search.approaches import baseline, mosix, shift
 from model_search.execution.data_handling.data_information import DatasetClass

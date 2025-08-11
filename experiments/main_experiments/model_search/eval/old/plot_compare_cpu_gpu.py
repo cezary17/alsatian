@@ -82,7 +82,7 @@ if __name__ == '__main__':
     caching_locations = ['GPU', 'CPU']
     num_models = 35
     measure_type = 'EXECUTION_STEPS'
-    plot_save_path = f'plots-compare-gpu-cpu'
+    plot_save_path = 'plots-compare-gpu-cpu'
 
     for distribution in distributions:
         plot(root_dir, models, approach, distribution, caching_locations, num_models, measure_type,

@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 
 
-import matplotlib.pyplot as plt
 
 def plot(data, output_path=None):
     # Extract keys and values from the dictionary

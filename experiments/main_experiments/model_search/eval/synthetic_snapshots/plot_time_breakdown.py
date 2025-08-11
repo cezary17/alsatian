@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from experiments.main_experiments.model_search.eval.synthetic_snapshots.plot_synthetic_snapshots import \
-    extract_times_of_interest, SUM_OVER_STEPS_DETAILED_NUMS_AGG, regroup_and_rename_times, APPROACH_NAME_MAPPING, \
-    BASELINE, SHIFT, MOSIX
+    extract_times_of_interest, SUM_OVER_STEPS_DETAILED_NUMS_AGG, regroup_and_rename_times, BASELINE, SHIFT, MOSIX
 from global_utils.model_names import RESNET_152, VIT_L_32
 
 
@@ -87,7 +86,7 @@ def stacked_bar_plot_three_configurations(config_1, config_2, config_3, file_pat
     ax_legend = fig_legend.add_subplot(111)
     ax_legend.legend(handles[::-1], labels[::-1], loc='center', ncol=1)
     ax_legend.axis('off')  # Hide the axes
-    legend_file_path = os.path.join(file_path, f'breakdown-legend.svg')
+    legend_file_path = os.path.join(file_path, 'breakdown-legend.svg')
     fig_legend.savefig(legend_file_path, bbox_inches='tight', format='svg')
     plt.close(fig_legend)
 

@@ -58,7 +58,7 @@ def run_exp_set(base_exp_args, eval_space, base_file_id):
 
                                 try:
                                     run_experiment(base_exp_args, file_id)
-                                except AssertionError as e:
+                                except AssertionError:
                                     print("RUN FAILED:", file_id)
                                     _, _, tb = sys.exc_info()
                                     traceback.print_tb(tb)  # Fixed format

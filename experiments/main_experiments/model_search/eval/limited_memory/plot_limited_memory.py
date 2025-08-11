@@ -89,7 +89,7 @@ def stacked_bar_plot_three_configurations(config_1, config_2, config_3, file_pat
 
 
 
-    legend_file_path = os.path.join(file_path, f'limit-memory-legend.svg')
+    legend_file_path = os.path.join(file_path, 'limit-memory-legend.svg')
     fig_legend.savefig(legend_file_path, bbox_inches='tight', format='svg')
     plt.close(fig_legend)
 
@@ -133,7 +133,7 @@ def plot_approaches_across_memory_config(root_dir, model_distribution, model_dis
 if __name__ == '__main__':
     output_path = './plots'
     model_distribution = "FIFTY_PERCENT"
-    root_dir = os.path.abspath(f'./results/limited-memory-exps')
+    root_dir = os.path.abspath('./results/limited-memory-exps')
     model_dist = "FIFTY_PERCENT"
 
     for approach in ['mosix', 'baseline', 'shift']:

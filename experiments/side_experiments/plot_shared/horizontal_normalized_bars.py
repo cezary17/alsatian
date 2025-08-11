@@ -62,9 +62,9 @@ def plot_horizontal_normalized_bar_chart(data, ignore=[], title="", save_path=No
         ax_legend.axis('off')  # Hide the axes
 
         if save_path and file_name:
-            legend_path = os.path.join(save_path, f'legend.png')
+            legend_path = os.path.join(save_path, 'legend.png')
             fig_legend.savefig(legend_path, format="png", bbox_inches='tight')
-            legend_path = os.path.join(save_path, f'legend.svg')
+            legend_path = os.path.join(save_path, 'legend.svg')
             fig_legend.savefig(legend_path, bbox_inches='tight')
 
         plt.close(fig_legend)

@@ -86,7 +86,7 @@ class ShiftExecutionPlanner:
 
     def _register_train_feature_prefix(self, snapshot, train_dataset_range):
         train_feature_prefix = f'{snapshot.id}-{TRAIN}-{train_dataset_range[0]}-{train_dataset_range[1]}'
-        if not snapshot.id in self._train_feature_prefixes:
+        if snapshot.id not in self._train_feature_prefixes:
             self._train_feature_prefixes[snapshot.id] = []
         self._train_feature_prefixes[snapshot.id].append(train_feature_prefix)
         return train_feature_prefix

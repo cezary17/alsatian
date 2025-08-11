@@ -50,8 +50,8 @@ def linear_proxy(train_data_loader: DataLoader, test_data_loader: DataLoader, nu
 
     # the features should be very small and fit into GPU memory, if not we have to adjust this code and load the data
     # multiple times in the training loop below
-    features, labels = collect_features_and_labels(caching_service, device, train_feature_ids, train_label_ids, bert_features)
-
+    features, labels = collect_features_and_labels(caching_service, device, train_feature_ids, train_label_ids,
+                                                   bert_features)
 
     # train model on train data
     model.train()
@@ -71,7 +71,8 @@ def linear_proxy(train_data_loader: DataLoader, test_data_loader: DataLoader, nu
     total_samples = 0
     correct_predictions = 0
 
-    features, labels = collect_features_and_labels(caching_service, device, test_feature_ids, test_label_ids, bert_features)
+    features, labels = collect_features_and_labels(caching_service, device, test_feature_ids, test_label_ids,
+                                                   bert_features)
 
     loss_func = torch.nn.CrossEntropyLoss()
 

@@ -9,7 +9,7 @@ from typing import Any, Callable, List, Optional
 
 import torch
 from torch import nn, Tensor
-from torchvision.models._api import register_model, Weights, WeightsEnum
+from torchvision.models._api import Weights, WeightsEnum
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models._utils import _make_divisible, _ovewrite_named_param, handle_legacy_interface
 from torchvision.ops.misc import Conv2dNormActivation

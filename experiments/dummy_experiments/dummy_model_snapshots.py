@@ -1,6 +1,6 @@
 import os
 
-from experiments.dummy_experiments.dummy_models import TwoBlockModel, get_sequential_two_block_model
+from experiments.dummy_experiments.dummy_models import get_sequential_two_block_model
 from experiments.main_experiments.snapshots.hugging_face.generate_hf_snapshots import get_existing_model_store
 from experiments.main_experiments.snapshots.synthetic.generate import generate_snapshot
 from global_utils.json_operations import write_json_to_file
