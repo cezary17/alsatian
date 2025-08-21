@@ -141,9 +141,9 @@ if __name__ == '__main__':
 
 
     # Extract and count snapshots
-    model_snapshots, model_store = get_100_ordered_google_vit_base_patch16_224_in21k(snapshot_save_base_path,
-                                                                                     hf_caching_path)
-    count_and_print_snapshots("Google ViT Base Patch16 224 IN21K", model_snapshots)
+    # model_snapshots, model_store = get_100_ordered_google_vit_base_patch16_224_in21k(snapshot_save_base_path,
+    #                                                                                  hf_caching_path)
+    # count_and_print_snapshots("Google ViT Base Patch16 224 IN21K", model_snapshots)
 
     model_snapshots, model_store = get_232_facebook_detr_resnet_50_snapshot_set(snapshot_save_base_path,
                                                                                 hf_caching_path)
@@ -157,8 +157,8 @@ if __name__ == '__main__':
                                                                                 hf_caching_path)
     count_and_print_snapshots("Facebook DETR ResNet-50 DC5", model_snapshots)
 
-    model_snapshots, model_store = get_SenseTime_deformable_detr_snapshot_set(snapshot_save_base_path, hf_caching_path)
-    count_and_print_snapshots("SenseTime Deformable DETR", model_snapshots)
+    # model_snapshots, model_store = get_SenseTime_deformable_detr_snapshot_set(snapshot_save_base_path, hf_caching_path)
+    # count_and_print_snapshots("SenseTime Deformable DETR", model_snapshots)
 
     model_snapshots, model_store = get_facebook_detr_resnet_101_snapshot_set(snapshot_save_base_path, hf_caching_path)
     count_and_print_snapshots("Facebook DETR ResNet-101", model_snapshots)
@@ -169,19 +169,19 @@ if __name__ == '__main__':
     model_snapshots, model_store = get_microsoft_resnet_152_snapshot_set(snapshot_save_base_path, hf_caching_path)
     count_and_print_snapshots("Microsoft ResNet-152", model_snapshots)
 
-    model_snapshots, model_store = get_microsoft_table_transformer_detection_snapshot_set(snapshot_save_base_path,
-                                                                                          hf_caching_path)
-    count_and_print_snapshots("Microsoft Table Transformer Detection", model_snapshots)
+    # model_snapshots, model_store = get_microsoft_table_transformer_detection_snapshot_set(snapshot_save_base_path,
+    #                                                                                       hf_caching_path)
+    # count_and_print_snapshots("Microsoft Table Transformer Detection", model_snapshots)
+    #
+    # model_snapshots, model_store = get_microsoft_table_transformer_structure_recognition_snapshot_set(
+    #     snapshot_save_base_path, hf_caching_path)
+    # count_and_print_snapshots("Microsoft Table Transformer Structure Recognition", model_snapshots)
 
-    model_snapshots, model_store = get_microsoft_table_transformer_structure_recognition_snapshot_set(
-        snapshot_save_base_path, hf_caching_path)
-    count_and_print_snapshots("Microsoft Table Transformer Structure Recognition", model_snapshots)
-
-    model_snapshots, model_store = get_facebook_dinov2_base_snapshot_set(snapshot_save_base_path, hf_caching_path)
-    count_and_print_snapshots("Facebook DINOv2 Base", model_snapshots)
-
-    model_snapshots, model_store = get_facebook_dinov2_large_snapshot_set(snapshot_save_base_path, hf_caching_path)
-    count_and_print_snapshots("Facebook DINOv2 Large", model_snapshots)
+    # model_snapshots, model_store = get_facebook_dinov2_base_snapshot_set(snapshot_save_base_path, hf_caching_path)
+    # count_and_print_snapshots("Facebook DINOv2 Base", model_snapshots)
+    #
+    # model_snapshots, model_store = get_facebook_dinov2_large_snapshot_set(snapshot_save_base_path, hf_caching_path)
+    # count_and_print_snapshots("Facebook DINOv2 Large", model_snapshots)
 
     # Print the total number of snapshots
     print(f"Total number of snapshots: {num_model_snapshots}")

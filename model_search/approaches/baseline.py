@@ -9,6 +9,7 @@ from model_search.caching_service import CachingService
 from model_search.execution.data_handling.data_information import DatasetClass
 from model_search.execution.engine.baseline_execution_engine import BaselineExecutionEngine
 from model_search.execution.planning.baseline_planner import TEST, BaselineExecutionPlanner, PlannerConfig
+from model_search.execution.planning.execution_plan import CacheLocation
 from model_search.model_snapshots.base_snapshot import ModelSnapshot
 
 
@@ -42,12 +43,13 @@ if __name__ == '__main__':
 
     # datasets
     dataset_paths = {
-        TRAIN: '/tmp/pycharm_project_924/data/imagenette-dummy/train',
-        TEST: '/tmp/pycharm_project_924/data/imagenette-dummy/val'
+        TRAIN: '/home/cezary/deployment/alsatian-pytorch/data/imagenette2/train',
+        TEST: '/home/cezary/deployment/alsatian-pytorch/data/imagenette2/val'
     }
 
     caching_path = '/mount-ssd/cache-dir'
-    planner_config = PlannerConfig(12, 128, 100, DatasetClass.CUSTOM_IMAGE_FOLDER, dataset_paths)
+    planner_config = PlannerConfig(12, 128, 100, DatasetClass.CUSTOM_IMAGE_FOLDER, dataset_paths,
+                                   CacheLocation.CPU, 100000)
 
     ranking = find_best_model(model_snapshots, planner_config, caching_path)
 

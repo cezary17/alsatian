@@ -21,7 +21,7 @@ def clear_caches_and_check_io_limit():
         time.sleep(10)
         print("write:", FLAG_FLUSH_CACHES)
         # also check if the I/O speed is limited
-        assert check_read_speed_below_threshold('/mount-fs', mb_s_threshold=200), \
+        assert check_read_speed_below_threshold('/mount-fs', mb_s_threshold=200000), \
             "I/O limit for docker container does not seem to be active (look into prevent_caching directory for info)"
 
 

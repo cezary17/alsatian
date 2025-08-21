@@ -120,7 +120,7 @@ def run_model_search(exp_args: ExpArgs):
                 base_model_id, fine_tuned_model_ids_file, exp_args.hf_caching_path)
 
             if snapshot_string == FACEBOOK_DETR_RESNET_50:
-                hf_snapshots = hf_snapshots[:232]
+                hf_snapshots = hf_snapshots[:100]
             elif snapshot_string == GOOGLE_VIT_BASE_PATCH16_224_IN21K:
                 hf_snapshots = hf_snapshots[:100]
 

@@ -1,7 +1,6 @@
 oscarmak/output
 NKDE/detr-resnet-50_finetuned_cppe5
 nashaatk/detr-resnet-50_finetuned_cppe5
-nsugianto/detr-resnet-50_finetuned_cppe5
 sarseneault/detr-resnet-50_finetuned_cppe5
 oscarmak/detr-resnet-50_finetuned_cppe5
 auduod/detr-resnet-50_finetuned_cppe5
@@ -131,11 +130,9 @@ joe611/chickens-composite-201010101010-150-epochs-wo-transform
 joe611/chickens-300-epoch-200-images
 joe611/chickens-composite-8044444-150-epochs-w-transform-metrics-test
 vemolka/detr-resnet-50_dogs
-bunbohue/detr-resnet-50_finetuned_cppe5
 H2789/use_data_finetuning
 yoon0915/cppe5_use_data_finetuning
 ArrayDice/total_detection_Model
-NoahMeissner/detr-resnet-50_finetuned_cppe5
 Anurag277/detr-resnet-50_finetuned_cppe5
 gobk/furniture-ngpea_use_data_finetuning
 minji1115/cppe5_use_data_finetuning

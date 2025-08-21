@@ -4,7 +4,8 @@ import time
 from datetime import datetime
 
 FLAG_FLUSH_CACHES = "flag-flush-caches"
-BASE_PATH = "/fs/nils-strassenburg/docker-mounted/mount-fs"
+# BASE_PATH = "/fs/nils-strassenburg/docker-mounted/mount-fs"
+BASE_PATH = "/mount-fs"
 
 
 def execute_command(command):

@@ -1,7 +1,6 @@
 oscarmak/output
 sarseneault/detr-resnet-50_finetuned_cppe5
 oscarmak/detr-resnet-50_finetuned_cppe5
-nsugianto/detr-resnet-50_finetuned_cppe5
 nashaatk/detr-resnet-50_finetuned_cppe5
 limehee/cppe5_use_data_finetuning
 auduod/detr-resnet-50_finetuned_cppe5
@@ -253,7 +252,6 @@ ckandemir/detr-resnet-50_finetuned_furniture
 ckandemir/detr-resnet-50_finetuned_cppe5
 chojo12/use_data_finetuning
 cd/daniel-detr-resnet-50_finetuned_cppe5
-bunbohue/detr-resnet-50_finetuned_cppe5
 brianmg/mg_data_finetuning
 binitt/hwars-buttons-model
 binitt/detr-resnet-50_finetuned_cppe5
@@ -292,7 +290,6 @@ PSW99/cppe5_use_data_finetuning
 PCFISH/cppe5_use_data_finetuning
 OhST/cppe5_use_data_finetuning
 NoahMeissner/detr-resnet-50_finetuned_uni_model
-NoahMeissner/detr-resnet-50_finetuned_cppe5
 NajlaSS/detr-resnet-50_finetuned_cppe5
 MyeongGyun/furniture-ngpea_use_data_finetuning
 Murdock007/detr-resnet-50_finetuned_stages
