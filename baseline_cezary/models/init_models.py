@@ -15,6 +15,7 @@ from baseline_cezary.util.init_hf_models import initialize_hf_model, MICROSOFT_R
     get_sequential_microsoft_resnet, GOOGLE_VIT_BASE_PATCH16_224_IN21K, DINO_V2_MODELS
 from baseline_cezary.util.model_names import *
 from baseline_cezary.util.model_operations import transform_to_sequential, split_model_in_two
+from baseline_cezary.util.quantization import apply_quantization
 
 DUMMY_TWO_BLOCK_MODEL = "dummy_two_block_model"
 
@@ -128,7 +129,19 @@ def initialize_model(model_name, pretrained=False, new_num_classes=None, feature
             first, _ = split_model_in_two(model, split_index)
             model = first
 
+    model._name = model_name
+
     return model
+
+
+def initialize_and_quantize_model(model_name, pretrained=False, new_num_classes=None, features_only=False,
+                                  sequential_model=False, freeze_feature_extractor=False, hf_base_model_id=None,
+                                  hf_model_id=None, hf_cache_dir=None):
+    model = initialize_model(model_name, pretrained, new_num_classes, features_only, sequential_model,
+                             freeze_feature_extractor, hf_base_model_id, hf_model_id, hf_cache_dir)
+    quantized_model = apply_quantization(model)
+
+    return model, quantized_model
 
 
 if __name__ == '__main__':

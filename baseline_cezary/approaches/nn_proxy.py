@@ -10,14 +10,16 @@ def get_input_dimension(batch):
     return sample_tensor.shape
 
 
-def linear_proxy(train_features, train_labels, test_features, test_labels, num_classes, devcie):
+def linear_proxy(train_features, train_labels, test_features, test_labels, num_classes, device):
     first_item = train_features[0]
     input_dimension = first_item.shape
 
     # init objects
     model = torch.nn.Linear(input_dimension[1], num_classes)
-    model = model.to(devcie)
+    model = model.to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+
+    loss_function = torch.nn.CrossEntropyLoss().to(device)
 
     # train model on train data
     model.train()
@@ -25,7 +27,8 @@ def linear_proxy(train_features, train_labels, test_features, test_labels, num_c
         for feature_batch, label_batch in zip(train_features, train_labels):
             optimizer.zero_grad()
             outputs = model(feature_batch)
-            loss = torch.nn.CrossEntropyLoss()(outputs, label_batch)
+            label_batch = label_batch.to(device)
+            loss = loss_function(outputs, label_batch)
             loss.backward()
             optimizer.step()
 
@@ -37,11 +40,16 @@ def linear_proxy(train_features, train_labels, test_features, test_labels, num_c
     total_samples = 0
     correct_predictions = 0
 
-    loss_func = torch.nn.CrossEntropyLoss()
+    # loss_func = torch.nn.CrossEntropyLoss()
+
+    loss_function.to(device)
 
     for feature_batch, label_batch in zip(test_features, test_labels):
         outputs = model(feature_batch)
-        loss = loss_func(outputs, label_batch)
+        # loss = loss_func(outputs, label_batch)
+        label_batch = label_batch.to(device)
+
+        loss = loss_function(outputs, label_batch)
 
         total_loss += loss.item()
 
