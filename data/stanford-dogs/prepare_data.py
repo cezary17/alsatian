@@ -35,14 +35,14 @@ def count_jpg_files_recursively(directory):
     return jpg_file_count
 
 if __name__ == '__main__':
-    train_file_names = get_file_names('/Users/nils/uni/programming/model-search-paper/data/stanford_dogs/lists/train_list.mat')
-    test_file_names = get_file_names('/Users/nils/uni/programming/model-search-paper/data/stanford_dogs/lists/test_list.mat')
+    train_file_names = get_file_names('/mount-fs/data/stanford-dogs/lists/train_list.mat')
+    test_file_names = get_file_names('/mount-fs/data/stanford-dogs/lists/test_list.mat')
 
     print(len(train_file_names))
     print(len(test_file_names))
 
-    images_root_dir = "/Users/nils/uni/programming/model-search-paper/data/stanford_dogs/Images"
-    target_dir = "/Users/nils/uni/programming/model-search-paper/data/stanford_dogs/prepared_data"
+    images_root_dir = "/mount-fs/data/stanford-dogs/Images"
+    target_dir = "/mount-fs/data/stanford-dogs/prepared_data"
 
     copy_and_rename_directory(images_root_dir, target_dir, "train")
     copy_and_rename_directory(images_root_dir, target_dir, "test")

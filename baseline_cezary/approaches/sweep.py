@@ -1,6 +1,8 @@
 import wandb
 import pprint
 
+from baseline_cezary.util.model_names import *
+
 
 def simplify_sweep_config(sweep_config):
     """
@@ -34,19 +36,21 @@ PROJECT_NAME = "alsatian-quantized"
 ENTITY_NAME = "cezary17"
 
 SWEEP_CONFIG = {
-    "name": "model_quantization_resnet_sweep",
+    "name": "model_quantization_sweep",
     "method": "grid",
     "metric": {"name": "accuracy_retention", "goal": "maximize"},
     "parameters": {
         "model_architecture": {
-            "values": [
-                "resnet18", "resnet34", "resnet50", "resnet101", "resnet152"
-            ]
+            "values": EFF_NETS
         },
-        "data_root": {"values": ["/mount-fs/data/imagenette2"]},
+        "data_root": {"values": ["/mount-fs/data/"]},
+        "dataset": {"values": ["imagenette2", "stanford-dogs"]},  # "imagenette2, stanford-dogs
         "batch_size": {"values": [128]},
         "num_workers": {"values": [10]},
-        "device": {"values": ["cuda"]},
+        "device": {"values": ["cpu"]},  # "cuda", "cpu"
+        "quantization_mode": {"values": ["dynamic"]},  # "dynamic", "static"
+        "backend": {"values": ["x86"]},  # "fbgemm", "qnnpack", "x86"
+        "dummy": {"values": [0, 1, 2]},
     },
 }
 

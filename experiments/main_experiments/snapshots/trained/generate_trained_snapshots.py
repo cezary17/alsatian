@@ -301,7 +301,7 @@ if __name__ == '__main__':
     data_paths = {
         DUMMY: "/mount-ssd/data/imagenette-dummy",
         FOOD_101: "/mount-ssd/data/food-101/prepared_data",
-        STANFORD_DOGS: "/mount-ssd/data/stanford_dogs/prepared_data",
+        STANFORD_DOGS: "/mount-ssd/data/stanford-dogs/prepared_data",
         STANFORD_CARS: "/mount-ssd/data/stanford-cars/car_data",
         IMAGE_WOOF: "/mount-ssd/data/image-woof/imagewoof2",
         CUB_BIRDS_200: "/mount-ssd/data/cub-birds-200/prepared_data",

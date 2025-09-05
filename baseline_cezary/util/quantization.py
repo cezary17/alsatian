@@ -9,8 +9,8 @@ def _apply_dynamic_quantization(model: torch.nn.Module, dtype=torch.qint8):
     return torch.ao.quantization.quantize_dynamic(model=model, dtype=dtype)
 
 
-def _apply_static_quantization(model: torch.nn.Module, calibration_loader: DataLoader, 
-                              backend='x86', dtype=torch.qint8):
+def _apply_static_quantization(model: torch.nn.Module, calibration_loader: DataLoader,
+                               backend='x86'):
     """Apply static quantization to the model using calibration data."""
     # Set quantization backend
     torch.backends.quantized.engine = backend
@@ -53,7 +53,6 @@ def _apply_static_quantization(model: torch.nn.Module, calibration_loader: DataL
                 print(f"Warning: Calibration failed on batch {batch_idx}: {e}")
                 continue
     
-    # Convert to quantized model
     quantized_model = torch.ao.quantization.convert(prepared_model)
     return quantized_model
 
@@ -80,28 +79,18 @@ def apply_quantization(model: torch.nn.Module, mode="int8", quantization_type="d
     model_copy = copy.deepcopy(model)
     model_copy.eval()
     
-    try:
-        if quantization_type.lower() == "static":
-            if calibration_data is None:
-                raise ValueError("Calibration data is required for static quantization")
-            quantized_model = _apply_static_quantization(model_copy, calibration_data, backend, dtype)
-        else:  # dynamic quantization
-            quantized_model = _apply_dynamic_quantization(model_copy, dtype)
-        
-        # Set name attribute
-        quantization_suffix = f"quantized_{quantization_type}_{mode}"
-        if hasattr(model, '_name'):
-            quantized_model._name = f"{model._name}_{quantization_suffix}"
-        else:
-            quantized_model._name = f"model_{quantization_suffix}"
-            
-        return quantized_model
-        
-    except Exception as e:
-        print(f"Quantization failed: {e}")
-        # Return the original model if quantization fails
-        if hasattr(model, '_name'):
-            model_copy._name = f"{model._name}_quantization_failed"
-        else:
-            model_copy._name = "model_quantization_failed"
-        return model_copy
+    if quantization_type.lower() == "static":
+        if calibration_data is None:
+            raise ValueError("Calibration data is required for static quantization")
+        quantized_model = _apply_static_quantization(model_copy, calibration_data, backend)
+    else:
+        quantized_model = _apply_dynamic_quantization(model_copy, dtype)
+
+    # Set name attribute
+    quantization_suffix = f"quantized_{quantization_type}_{mode}"
+    if hasattr(model, '_name'):
+        quantized_model._name = f"{model._name}_{quantization_suffix}"
+    else:
+        quantized_model._name = f"model_{quantization_suffix}"
+
+    return quantized_model

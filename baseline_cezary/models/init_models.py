@@ -137,7 +137,7 @@ def initialize_model(model_name, pretrained=False, new_num_classes=None, feature
 def initialize_and_quantize_model(model_name, pretrained=False, new_num_classes=None, features_only=False,
                                   sequential_model=False, freeze_feature_extractor=False, hf_base_model_id=None,
                                   hf_model_id=None, hf_cache_dir=None, quantization_type="dynamic", 
-                                  calibration_data=None, backend='x86'):
+                                  calibration_data=None, backend='fbgemm'):
     model = initialize_model(model_name, pretrained, new_num_classes, features_only, sequential_model,
                              freeze_feature_extractor, hf_base_model_id, hf_model_id, hf_cache_dir)
     quantized_model = apply_quantization(model, quantization_type=quantization_type, 
