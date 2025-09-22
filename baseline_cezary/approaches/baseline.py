@@ -1,12 +1,14 @@
 import argparse
 import os
+from typing import Tuple
 
 import torch
 import torchvision.transforms as transforms
 import wandb
-from torchvision.datasets import Imagenette, ImageFolder
+import re
+from torchvision.datasets import Imagenette, ImageFolder, StanfordCars, Food101
 
-from baseline_cezary.approaches.nn_proxy import linear_proxy
+from baseline_cezary.approaches.nn_proxy import linear_proxy, linear_proxy_quantized
 from baseline_cezary.models.init_models import initialize_model, initialize_and_quantize_model
 from baseline_cezary.util.model_names import *
 from baseline_cezary.util.quantization import apply_quantization
@@ -14,7 +16,7 @@ from baseline_cezary.util.quantization import apply_quantization
 CPU = 'cpu'
 CUDA = 'cuda'
 
-# DEVICE = CUDA
+DEVICE = CPU
 
 
 def load_dataset(dataset_name, data_root, transform, split="train"):
@@ -29,6 +31,26 @@ def load_dataset(dataset_name, data_root, transform, split="train"):
             return ImageFolder(root=os.path.join(data_root, "prepared_data", "train"), transform=transform)
         else:
             return ImageFolder(root=os.path.join(data_root, "prepared_data", "test"), transform=transform)
+    elif dataset_name == "stanford-cars":
+        if split == "train":
+            return ImageFolder(root=os.path.join(data_root, "car_data", "car_data", "train"), transform=transform)
+        else:
+            return ImageFolder(root=os.path.join(data_root, "car_data", "car_data", "test"), transform=transform)
+    elif dataset_name == "food-101":
+        if split == "train":
+            return Food101(root=data_root, split="train", transform=transform, download=True)
+        else:
+            return Food101(root=data_root, split="test", transform=transform, download=True)
+    elif dataset_name == "cub-birds-200":
+        if split == "train":
+            return ImageFolder(root=os.path.join(data_root, "prepared_data", "train"), transform=transform)
+        else:
+            return ImageFolder(root=os.path.join(data_root, "prepared_data", "test"), transform=transform)
+    elif dataset_name == "image-woof":
+        if split == "train":
+            return ImageFolder(root=os.path.join(data_root, "train"), transform=transform)
+        else:
+            return ImageFolder(root=os.path.join(data_root, "val"), transform=transform)
     else:
         raise ValueError(f"Unsupported dataset: {dataset_name}")
 
@@ -37,10 +59,55 @@ def get_dataset_info(dataset_name):
     """Get dataset-specific information like number of classes."""
     if dataset_name == "imagenette" or dataset_name == "imagenette2":
         return {"num_classes": 10}
+    elif dataset_name == "image-woof":
+        return {"num_classes": 10}
     elif dataset_name == "stanford-dogs":
-        return {"num_classes": 120}  # Stanford Dogs has 120 dog breeds
+        return {"num_classes": 120}
+    elif dataset_name == "food-101":
+        return {"num_classes": 101}
+    elif dataset_name == "stanford-cars":
+        return {"num_classes": 196}
+    elif dataset_name == "cub-birds-200":
+        return {"num_classes": 200}
     else:
         raise ValueError(f"Unsupported dataset: {dataset_name}")
+
+
+def get_model_ids_from_path(path: str) -> Tuple[set, set, set]:
+    pattern = r'(resnet\d{2,3})-(.+)-(epoch-\d{1,2})\.pth'
+
+    lines = os.listdir(path)
+
+    models = set()
+    models_with_tags = set()
+    epochs = set()
+
+    for line in lines:
+        match = re.search(pattern, line)
+        if match:
+            model_name = match.group(1)
+            models.add(model_name)
+
+            model_tag = match.group(2)
+            model_with_tag = f"{model_name}-{model_tag}"
+            models_with_tags.add(model_with_tag)
+
+            epoch = match.group(3)
+            epochs.add(epoch)
+
+    return models, models_with_tags, epochs
+
+
+def get_trained_model_path(dataset_name: str, model_and_tag: str, epoch: str):
+    base_path = "/mount-fs/trained-snapshots/"
+    dataset_path = os.path.join(base_path, dataset_name)
+
+    model_path = f"{model_and_tag}-{epoch}.pth"
+
+    full_path = os.path.join(dataset_path, model_path)
+    if not os.path.exists(full_path):
+        raise FileNotFoundError(f"Model snapshot not found: {full_path}")
+    return full_path
 
 
 def load_data_to_device(batch):
@@ -56,7 +123,7 @@ def extract_features(model, data, device=None):
     config = wandb.config if wandb.run else {}
     batch_size = config.get("batch_size", 128)
     num_workers = config.get("num_workers", 10)
-    
+
     # Use provided device or fallback to global DEVICE
     target_device = device if device is not None else DEVICE
 
@@ -84,12 +151,15 @@ def extract_features(model, data, device=None):
         else:
             inputs, labels = data[:-1], data[-1]
 
+        # if i > 2:
+        #     break
+
         # Move inputs to the same device as the model
         if isinstance(inputs, torch.Tensor):
             inputs = inputs.to(target_device)
         elif isinstance(inputs, (list, tuple)):
             inputs = [inp.to(target_device) if isinstance(inp, torch.Tensor) else inp for inp in inputs]
-        
+
         with torch.no_grad():
             out = model(inputs)
 
@@ -99,16 +169,17 @@ def extract_features(model, data, device=None):
     return all_features, all_labels
 
 
-def score_models(model_list, train_data, test_data, num_classes):
+def score_models(model_list, train_data, test_data, num_classes, model_name=""):
     results = {}
 
     for i, model in enumerate(model_list):
-        model_type = "original" if i == 0 else "quantized"
-        print(f"Scoring model: {model._name} ({model_type})")
-        
+        model_qtype = "original" if i == 0 else "quantized"
+        model_id = f"{model_name}_{model_qtype}" if model_name else model_qtype
+        print(f"Scoring model: {model.model_name} ({model_qtype})")
+
         # Debug: Check actual device of model parameters
         actual_device = next(model.parameters()).device
-        print(f"Model {model_type} actual device: {actual_device}")
+        print(f"Model {model_qtype} actual device: {actual_device}")
         print(f"Target device: {DEVICE}")
 
         model_device = DEVICE
@@ -119,28 +190,16 @@ def score_models(model_list, train_data, test_data, num_classes):
 
         print('Loss: {:.4f}, Acc: {:.4f}'.format(loss, acc))
 
-        # Store results for logging
-        results[f"{model_type}_test_loss"] = loss
-        results[f"{model_type}_test_accuracy"] = acc
-        results[f"{model_type}_model_name"] = model._name
-        results[f"{model_type}_device"] = model_device
+        results[f"{model_id}_test_loss"] = loss
+        results[f"{model_id}_test_accuracy"] = acc
+        results[f"{model_id}_model_name"] = model.model_name
+        results[f"{model_id}_device"] = model_device
 
-        # Get model parameter count if available
-        if hasattr(model, 'parameters'):
-            param_count = sum(p.numel() for p in model.parameters())
-            results[f"{model_type}_parameters"] = param_count
-
-    # Log all results at once
     wandb.log(results)
 
-    # Calculate and log compression metrics if we have both models
     if "original_test_accuracy" in results and "quantized_test_accuracy" in results:
         accuracy_retention = results["quantized_test_accuracy"] / results["original_test_accuracy"]
         wandb.log({"accuracy_retention": accuracy_retention})
-
-        if "original_parameters" in results and "quantized_parameters" in results:
-            compression_ratio = results["original_parameters"] / results["quantized_parameters"]
-            wandb.log({"compression_ratio": compression_ratio})
 
 
 def parse_arguments():
@@ -161,8 +220,15 @@ def parse_arguments():
         "--dataset",
         type=str,
         default="imagenette",
-        choices=["imagenette", "stanford-dogs"],
+        choices=["imagenette", "stanford-dogs", "stanford-cars", "cub-birds-200", "food-101", "image-woof"],
         help="Dataset to use for experiments"
+    )
+    parser.add_argument(
+        "--model-dataset",
+        type=str,
+        default="stanford-dogs",
+        choices=["stanford-dogs", "stanford-cars", "cub-birds-200", "food-101", "image-woof"],
+        help="Dataset on which the model was originally trained"
     )
     parser.add_argument(
         "--data-root",
@@ -220,6 +286,17 @@ def parse_arguments():
         default=1,
         help="Number of runs for agent mode (default: 1)"
     )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume a previous run"
+    )
+    parser.add_argument(
+        "--run-id",
+        type=str,
+        default=None,
+        help="WandB run ID to resume"
+    )
 
     return parser.parse_args()
 
@@ -227,20 +304,17 @@ def parse_arguments():
 def run_experiment():
     config = wandb.config
 
-    # Use config values or defaults
-    model_architecture = config.get("model_architecture", "resnet18")
-    dataset = config.get("dataset", "imagenette")
-    data_root = config.get("data_root", "/mount-fs/data")
-    batch_size = config.get("batch_size", 128)
-    num_workers = config.get("num_workers", 10)
-    device = config.get("device", "cuda")
-    quantization_mode = config.get("quantization_mode", "dynamic")
-    backend = config.get("backend", "fbgemm")
+    model_architecture = config.get("model_architecture")
+    dataset = config.get("dataset")
+    model_dataset = config.get("model_dataset")
+    data_root = config.get("data_root")
+    batch_size = config.get("batch_size")
+    num_workers = config.get("num_workers")
+    device = config.get("device")
 
     global DEVICE
     DEVICE = device
 
-    # Get model name constant
     model_name_mapping = {
         "resnet18": RESNET_18,
         "resnet34": RESNET_34,
@@ -273,62 +347,69 @@ def run_experiment():
         full_data_root = os.path.join(data_root, "imagenette2")
     elif dataset == "stanford-dogs":
         full_data_root = os.path.join(data_root, "stanford-dogs")
+    elif dataset == "stanford-cars":
+        full_data_root = os.path.join(data_root, "stanford-cars")
+    elif dataset == "cub-birds-200":
+        full_data_root = os.path.join(data_root, "cub-birds-200")
+    elif dataset == "food-101":
+        full_data_root = os.path.join(data_root, "food-101")
+    elif dataset == "image-woof":
+        full_data_root = os.path.join(data_root, "image-woof")
     else:
-        full_data_root = data_root
+        raise ValueError(f"Unsupported dataset: {dataset}")
 
     train_data = load_dataset(dataset, full_data_root, transform, split="train")
     test_data = load_dataset(dataset, full_data_root, transform, split="test")
-    
+
     # Get dataset info
     dataset_info = get_dataset_info(dataset)
     num_classes = dataset_info["num_classes"]
 
-    if quantization_mode == "dynamic":
-        model, quantized_model = initialize_and_quantize_model(model_name, pretrained=True, features_only=True)
+    model_names, model_names_tags, epochs = get_model_ids_from_path(f"/mount-fs/trained-snapshots/{model_dataset}/")
+
+    filtered_model_names_tags = sorted({name for name in model_names_tags if name.startswith(model_architecture)})
+
+    print("Model snapshots found:", filtered_model_names_tags)
+
+    for model_tag in filtered_model_names_tags:
+        model_path = get_trained_model_path(model_dataset, model_tag, "epoch-20")
+        print("Loading model:", model_path)
+        wandb.log({"model_snapshot": model_tag})
+        try:
+            model, quantized_model = initialize_and_quantize_model(model_name, mode="int8", pretrained=True,
+                                                               sequential_model=True, features_only=True,
+                                                               trained_snapshot_path=model_path)
+        except RuntimeError as e:
+            print(f"Error loading model {model_tag}: {e}")
+            wandb.log({
+                "error": str(e),
+            })
+            continue
+
         model.to(DEVICE)
         quantized_model.to(DEVICE)
         model_list = [model, quantized_model]
-    elif quantization_mode == "static":
-        calibration_size = min(1000, len(train_data))
-        calibration_indices = torch.randperm(len(train_data))[:calibration_size]
-        calibration_dataset = torch.utils.data.Subset(train_data, calibration_indices)
-        calibration_loader = torch.utils.data.DataLoader(
-            calibration_dataset, 
-            batch_size=batch_size, 
-            shuffle=False, 
-            num_workers=num_workers
-        )
-        
-        print(f"Using {calibration_size} samples for calibration")
-        
-        model, quantized_model = initialize_and_quantize_model(
-            model_name, 
-            pretrained=True, 
-            features_only=True,
-            quantization_type="static", 
-            calibration_data=calibration_loader, 
-            backend=backend
-        )
-        model.to(DEVICE)
-        quantized_model.to(DEVICE)
-        model_list = [model, quantized_model]
-    else:
-        raise ValueError(f"Unsupported quantization mode: {quantization_mode}")
 
-    wandb.log({
-        "train_dataset_size": len(train_data),
-        "test_dataset_size": len(test_data),
-        "num_classes": num_classes,
-        "dataset": dataset,
-        "model_architecture": model_architecture,
-        "quantization_mode": quantization_mode,
-        "batch_size": batch_size,
-        "num_workers": num_workers,
-        "device": device
-    })
+        wandb.log({
+            "train_dataset_size": len(train_data),
+            "test_dataset_size": len(test_data),
+            "num_classes": num_classes,
+            "dataset": dataset,
+            "model_architecture": model_architecture,
+            "model_snapshot": model_tag,
+            "batch_size": batch_size,
+            "num_workers": num_workers,
+            "device": device
+        })
 
-    score_models(model_list, train_data, test_data, num_classes)
+        try:
+            score_models(model_list, train_data, test_data, num_classes)
+        except RuntimeError as e:
+            print(f"Error during model scoring: {e}")
+            wandb.log({"error": str(e)})
+            continue
 
+    print("Finished all models.")
 
 def run_experiment_standalone(args):
     wandb.init(
@@ -337,11 +418,11 @@ def run_experiment_standalone(args):
         config={
             "model_architecture": args.model_architecture,
             "dataset": args.dataset,
+            "model_dataset": args.model_dataset,
             "data_root": args.data_root,
             "batch_size": args.batch_size,
             "num_workers": args.num_workers,
             "device": args.device,
-            "quantization_mode": args.quantization_mode,
             "backend": args.backend,
         },
     )
@@ -352,8 +433,13 @@ def run_experiment_agent():
     wandb.init()
     run_experiment()
 
+def run_experiment_resume(run_id):
+    wandb.init(entity="cezary17", project="alsatian-quantized", id=run_id, resume="must")
+    run_experiment()
+
 
 def main(args):
+    torch.multiprocessing.set_sharing_strategy("file_system")
     if args.agent:
         wandb.agent(
             sweep_id=args.sweepid,
@@ -362,6 +448,8 @@ def main(args):
             entity="cezary17",
             count=args.count,
         )
+    elif args.resume:
+        run_experiment_resume(args.run_id)
     else:
         run_experiment_standalone(args)
 

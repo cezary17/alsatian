@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import torch
 from torch import nn
 
@@ -129,21 +131,379 @@ def initialize_model(model_name, pretrained=False, new_num_classes=None, feature
             first, _ = split_model_in_two(model, split_index)
             model = first
 
-    model._name = model_name
+    model.model_name = model_name
 
     return model
 
 
 def initialize_and_quantize_model(model_name, pretrained=False, new_num_classes=None, features_only=False,
                                   sequential_model=False, freeze_feature_extractor=False, hf_base_model_id=None,
-                                  hf_model_id=None, hf_cache_dir=None, quantization_type="dynamic", 
-                                  calibration_data=None, backend='fbgemm'):
+                                  hf_model_id=None, hf_cache_dir=None, quantization_type="dynamic",
+                                  calibration_data=None, backend='fbgemm', mode="int8", trained_snapshot_path=None):
     model = initialize_model(model_name, pretrained, new_num_classes, features_only, sequential_model,
                              freeze_feature_extractor, hf_base_model_id, hf_model_id, hf_cache_dir)
-    quantized_model = apply_quantization(model, quantization_type=quantization_type, 
-                                       calibration_data=calibration_data, backend=backend)
+    expected = model.state_dict()
+    print("Expected: ", expected.keys())
+    print("Length: ", len(expected.keys()))
+    sd = torch.load(trained_snapshot_path, map_location=torch.device("cpu"))
+    # Remap keys
+
+    print("Found: ", sd.keys())
+    print("Length: ", len(sd.keys()))
+
+    # print("New: ", new_sd.keys())
+    # print("Length: ", len(new_sd.keys()))
+    if model_name == RESNET_18:
+        new_sd_one = remap_state_dict_keys_resnet18_one(sd)
+        new_sd_two = remap_state_dict_keys_resnet18_two(sd)
+        new_sd_three = remap_state_dict_keys_resnet18_three(sd)
+        new_sd_four = remap_state_dict_keys_resnet18_four(sd)
+
+        new_sd_list = [new_sd_one, new_sd_two, new_sd_three, new_sd_four]
+
+        for i, new_sd in enumerate(new_sd_list):
+            print(f"Trying to load with remapping function {i + 1}")
+            try:
+                model.load_state_dict(new_sd)
+                print(f"Successfully loaded state dict with remapping function {i + 1}")
+                break
+            except RuntimeError:
+                print(f"Remapping function {i + 1} failed")
+        else:
+            raise RuntimeError("All remapping functions failed to load the state dict.")
+        # try:
+        #     print("Loading state dict using first remapping function")
+        #     model.load_state_dict(new_sd)
+        # except RuntimeError as e:
+        #     print("First remapping function failed, trying the other one")
+        #     new_sd = remap_state_dict_keys_resnet18_two(sd)
+        #     model.load_state_dict(new_sd)
+    elif model_name == RESNET_152:
+        print("Loading state dict using remapping function for resnet152")
+        new_sd_one = remap_state_dict_resnet152_one(sd)
+        new_sd_two = remap_state_dict_resnet152_two(sd)
+        new_sd_three = remap_state_dict_resnet152_three(sd)
+        new_sd_four = remap_state_dict_resnet152_four(sd)
+        new_sd_five = remap_state_dict_resnet152_five(sd)
+
+        new_sd_list = [new_sd_one, new_sd_two, new_sd_three, new_sd_four, new_sd_five]
+
+        for i, new_sd in enumerate(new_sd_list):
+            print(f"Trying to load with remapping function {i + 1}")
+            try:
+                model.load_state_dict(new_sd)
+                print(f"Successfully loaded state dict with remapping function {i + 1}")
+                break
+            except RuntimeError:
+                print(f"Remapping function {i + 1} failed")
+        else:
+            raise RuntimeError("All remapping functions failed to load the state dict.")
+
+    quantized_model = apply_quantization(model, mode=mode, quantization_type=quantization_type,
+                                         calibration_data=calibration_data, backend=backend)
 
     return model, quantized_model
+
+
+"""
+The state dict are different for some model snapshots, this is the best I came up with to remap the keys since I have
+not discovered any pattern when the '1.0.' or '0.10' version appears.
+
+Note: There is always a layer 12 of the resnet model, probably the decoder head that was trained in the pretrained 
+model. We ignore it here, hence no else: in the remapping functions, those keys are simply dropped.
+"""
+
+
+def remap_state_dict_keys_resnet18_one(state_dict):
+    new_sd = OrderedDict()
+    for k, v in state_dict.items():
+        new_key = k
+        if new_key.startswith("0."):
+            new_key = new_key[2:]  # remove "0." prefix
+            new_sd[new_key] = v
+        elif new_key.startswith("1.0."):
+            new_key = f"11.{new_key[4:]}"  # change "1.0." to "11."
+            new_sd[new_key] = v
+    return new_sd
+
+
+def remap_state_dict_keys_resnet18_two(state_dict):
+    new_sd = OrderedDict()
+    for k, v in state_dict.items():
+        new_key = k
+        if new_key.startswith("0."):
+            new_key = new_key[2:]  # remove "0." prefix
+            new_sd[new_key] = v
+        elif new_key.startswith("1.0."):
+            new_key = f"10.{new_key[4:]}"  # change "1.0." to "10."
+            new_sd[new_key] = v
+        elif new_key.startswith("1.1."):
+            new_key = f"11.{new_key[4:]}"  # change "1.1." to "11."
+            new_sd[new_key] = v
+    return new_sd
+
+
+def remap_state_dict_keys_resnet18_three(state_dict):
+    new_sd = OrderedDict()
+    for k, v in state_dict.items():
+        new_key = k
+        if new_key.startswith("0."):
+            new_key = new_key[2:]  # remove "0." prefix
+            new_sd[new_key] = v
+        elif new_key.startswith("1.0."):
+            new_key = f"9.{new_key[4:]}"  # change "1.0." to "10."
+            new_sd[new_key] = v
+        elif new_key.startswith("1.1."):
+            new_key = f"10.{new_key[4:]}"  # change "1.1." to "11."
+            new_sd[new_key] = v
+        elif new_key.startswith("1.2."):
+            new_key = f"11.{new_key[4:]}"
+            new_sd[new_key] = v
+    return new_sd
+
+
+def remap_state_dict_keys_resnet18_four(state_dict):
+    new_sd = OrderedDict()
+    for k, v in state_dict.items():
+        new_key = k
+        if new_key.startswith("0."):
+            new_key = new_key[2:]  # remove "0." prefix
+            new_sd[new_key] = v
+        elif new_key.startswith("1.0."):
+            new_key = f"8.{new_key[4:]}"  # change "1.0." to "10."
+            new_sd[new_key] = v
+        elif new_key.startswith("1.1."):
+            new_key = f"9.{new_key[4:]}"  # change "1.1." to "11."
+            new_sd[new_key] = v
+        elif new_key.startswith("1.2."):
+            new_key = f"10.{new_key[4:]}"
+            new_sd[new_key] = v
+        elif new_key.startswith("1.3."):
+            new_key = f"11.{new_key[4:]}"
+            new_sd[new_key] = v
+    return new_sd
+
+
+"""
+Man fuck this
+"""
+
+
+def remap_state_dict_resnet152_one(state_dict):
+    new_sd = OrderedDict()
+    for k, v in state_dict.items():
+        new_key = k
+        if new_key.startswith("0."):
+            new_key = new_key[2:]  # remove "0." prefix
+            new_sd[new_key] = v
+        if new_key.startswith('1.0.'):
+            new_key = new_key.replace('1.0.', '44.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.1.'):
+            new_key = new_key.replace('1.1.', '45.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.2.'):
+            new_key = new_key.replace('1.2.', '46.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.3.'):
+            new_key = new_key.replace('1.3.', '47.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.4.'):
+            new_key = new_key.replace('1.4.', '48.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.5.'):
+            new_key = new_key.replace('1.5.', '49.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.6.'):
+            new_key = new_key.replace('1.6.', '50.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.7.'):
+            new_key = new_key.replace('1.7.', '51.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.8.'):
+            new_key = new_key.replace('1.8.', '52.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.9.'):
+            new_key = new_key.replace('1.9.', '53.')
+            new_sd[new_key] = v
+
+    return new_sd
+
+
+def remap_state_dict_resnet152_two(state_dict):
+    new_sd = OrderedDict()
+    for k, v in state_dict.items():
+        new_key = k
+        if new_key.startswith("0."):
+            new_key = new_key[2:]  # remove "0." prefix
+            new_sd[new_key] = v
+        if new_key.startswith('1.0.'):
+            new_key = new_key.replace('1.0.', '43.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.1.'):
+            new_key = new_key.replace('1.1.', '44.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.2.'):
+            new_key = new_key.replace('1.2.', '45.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.3.'):
+            new_key = new_key.replace('1.3.', '46.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.4.'):
+            new_key = new_key.replace('1.4.', '47.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.5.'):
+            new_key = new_key.replace('1.5.', '48.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.6.'):
+            new_key = new_key.replace('1.6.', '49.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.7.'):
+            new_key = new_key.replace('1.7.', '50.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.8.'):
+            new_key = new_key.replace('1.8.', '51.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.9.'):
+            new_key = new_key.replace('1.9.', '52.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.10.'):
+            new_key = new_key.replace('1.10.', '53.')
+            new_sd[new_key] = v
+
+    return new_sd
+
+
+def remap_state_dict_resnet152_three(state_dict):
+    new_sd = OrderedDict()
+    for k, v in state_dict.items():
+        new_key = k
+        if new_key.startswith("0."):
+            new_key = new_key[2:]  # remove "0." prefix
+            new_sd[new_key] = v
+        elif new_key.startswith('1.0.'):
+            new_key = new_key.replace('1.0.', '40.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.1.'):
+            new_key = new_key.replace('1.1.', '41.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.2.'):
+            new_key = new_key.replace('1.2.', '42.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.3.'):
+            new_key = new_key.replace('1.3.', '43.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.4.'):
+            new_key = new_key.replace('1.4.', '44.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.5.'):
+            new_key = new_key.replace('1.5.', '45.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.6.'):
+            new_key = new_key.replace('1.6.', '46.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.7.'):
+            new_key = new_key.replace('1.7.', '47.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.8.'):
+            new_key = new_key.replace('1.8.', '48.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.9.'):
+            new_key = new_key.replace('1.9.', '49.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.10.'):
+            new_key = new_key.replace('1.10.', '50.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.11.'):
+            new_key = new_key.replace('1.11.', '51.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.12.'):
+            new_key = new_key.replace('1.12.', '52.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.13.'):
+            new_key = new_key.replace('1.13.', '53.')
+            new_sd[new_key] = v
+
+    return new_sd
+
+
+def remap_state_dict_resnet152_four(state_dict):
+    new_sd = OrderedDict()
+    for k, v in state_dict.items():
+        new_key = k
+        if new_key.startswith("0."):
+            new_key = new_key[2:]  # remove "0." prefix
+            new_sd[new_key] = v
+        elif new_key.startswith('1.0.'):
+            new_key = new_key.replace('1.0.', '38.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.1.'):
+            new_key = new_key.replace('1.1.', '39.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.2.'):
+            new_key = new_key.replace('1.2.', '40.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.3.'):
+            new_key = new_key.replace('1.3.', '41.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.4.'):
+            new_key = new_key.replace('1.4.', '42.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.5.'):
+            new_key = new_key.replace('1.5.', '43.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.6.'):
+            new_key = new_key.replace('1.6.', '44.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.7.'):
+            new_key = new_key.replace('1.7.', '45.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.8.'):
+            new_key = new_key.replace('1.8.', '46.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.9.'):
+            new_key = new_key.replace('1.9.', '47.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.10.'):
+            new_key = new_key.replace('1.10.', '48.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.11.'):
+            new_key = new_key.replace('1.11.', '49.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.12.'):
+            new_key = new_key.replace('1.12.', '50.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.13.'):
+            new_key = new_key.replace('1.13.', '51.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.14.'):
+            new_key = new_key.replace('1.14.', '52.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.15.'):
+            new_key = new_key.replace('1.15.', '53.')
+            new_sd[new_key] = v
+
+    return new_sd
+
+
+def remap_state_dict_resnet152_five(state_dict):
+    new_sd = OrderedDict()
+    for k, v in state_dict.items():
+        new_key = k
+        if new_key.startswith("0."):
+            new_key = new_key[2:]  # remove "0." prefix
+            new_sd[new_key] = v
+        elif new_key.startswith('1.0.'):
+            new_key = new_key.replace('1.0.', '51.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.1.'):
+            new_key = new_key.replace('1.1.', '52.')
+            new_sd[new_key] = v
+        elif new_key.startswith('1.2.'):
+            new_key = new_key.replace('1.2.', '53.')
+            new_sd[new_key] = v
+
+    return new_sd
 
 
 if __name__ == '__main__':

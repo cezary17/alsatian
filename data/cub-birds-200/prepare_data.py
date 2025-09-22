@@ -54,12 +54,12 @@ def delete_non_valid_files(root_dir, valid_ids, id_map):
 
 
 if __name__ == '__main__':
-    root_dir = "/Users/nils/uni/programming/model-search-paper/data/cub-birds-200/CUB_200_2011/CUB_200_2011"
+    root_dir = "/mount-fs/data/cub-birds-200/CUB_200_2011"
     images_dir = os.path.join(root_dir, "images")
     train_test_split_file = os.path.join(root_dir, "train_test_split.txt")
     id_mapping_file = os.path.join(root_dir, "images.txt")
 
-    target_dir = "/Users/nils/uni/programming/model-search-paper/data/cub-birds-200/prepared_data"
+    target_dir = "/mount-fs/data/cub-birds-200/prepared_data"
 
     train_ids, test_ids = read_file_into_lists(train_test_split_file)
     id_map = create_map_from_file(id_mapping_file)

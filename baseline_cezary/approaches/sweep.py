@@ -41,16 +41,16 @@ SWEEP_CONFIG = {
     "metric": {"name": "accuracy_retention", "goal": "maximize"},
     "parameters": {
         "model_architecture": {
-            "values": EFF_NETS
+            "values": ["resnet18"]
         },
         "data_root": {"values": ["/mount-fs/data/"]},
-        "dataset": {"values": ["imagenette2", "stanford-dogs"]},  # "imagenette2, stanford-dogs
+        "dataset": {"values": ["imagenette", "stanford-dogs", "stanford-cars", "cub-birds-200", "food-101", "image-woof"]},
+        "model_dataset": {"values": ["stanford-dogs", "stanford-cars", "cub-birds-200", "food-101", "image-woof"]},
         "batch_size": {"values": [128]},
         "num_workers": {"values": [10]},
-        "device": {"values": ["cpu"]},  # "cuda", "cpu"
-        "quantization_mode": {"values": ["dynamic"]},  # "dynamic", "static"
-        "backend": {"values": ["x86"]},  # "fbgemm", "qnnpack", "x86"
-        "dummy": {"values": [0, 1, 2]},
+        "device": {"values": ["cuda"]},  # "cuda", "cpu"
+        # "quantization_mode": {"values": ["dynamic"]},  # "dynamic", "static"
+        # "backend": {"values": ["x86"]}  # "fbgemm", "qnnpack", "x86"
     },
 }
 

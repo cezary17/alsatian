@@ -32,13 +32,13 @@ def delete_non_valid_files(root_dir, valid_ids):
 
 
 if __name__ == '__main__':
-    root_dir = "/Users/nils/uni/programming/model-search-paper/data/food-101/food-101"
+    root_dir = "/mount-fs/data/food-101/food-101"
     train_ids = extract_ids(os.path.join(root_dir, "meta", "train.txt"))
     test_ids = extract_ids(os.path.join(root_dir, "meta", "test.txt"))
 
     images_dir = os.path.join(root_dir, "images")
 
-    target_dir = "/Users/nils/uni/programming/model-search-paper/data/food-101/prepared_data"
+    target_dir = "/mount-fs/data/food-101/prepared_data"
 
     # # copy directory twice
     copy_and_rename_directory(images_dir, target_dir, "train")

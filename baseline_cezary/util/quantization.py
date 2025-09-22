@@ -6,7 +6,12 @@ import copy
 
 def _apply_dynamic_quantization(model: torch.nn.Module, dtype=torch.qint8):
     """Apply dynamic quantization to the model."""
-    return torch.ao.quantization.quantize_dynamic(model=model, dtype=dtype)
+
+    moved_model = model.to('cpu')
+
+    quantized_model = torch.ao.quantization.quantize_dynamic(model=moved_model, dtype=dtype)
+
+    return quantized_model.to('cuda')
 
 
 def _apply_static_quantization(model: torch.nn.Module, calibration_loader: DataLoader,
@@ -72,8 +77,7 @@ def apply_quantization(model: torch.nn.Module, mode="int8", quantization_type="d
     Returns:
         Quantized model
     """
-    # Determine dtype based on mode
-    dtype = torch.qint8 if mode == "int8" else torch.qint16
+    dtype = torch.qint8
     
     # Create a copy of the model to avoid modifying the original
     model_copy = copy.deepcopy(model)
@@ -89,8 +93,8 @@ def apply_quantization(model: torch.nn.Module, mode="int8", quantization_type="d
     # Set name attribute
     quantization_suffix = f"quantized_{quantization_type}_{mode}"
     if hasattr(model, '_name'):
-        quantized_model._name = f"{model._name}_{quantization_suffix}"
+        quantized_model.model_name = f"{model._name}_{quantization_suffix}"
     else:
-        quantized_model._name = f"model_{quantization_suffix}"
+        quantized_model.model_name = f"model_{quantization_suffix}"
 
     return quantized_model
